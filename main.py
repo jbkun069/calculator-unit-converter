@@ -1,108 +1,124 @@
+import math
+
 def basic_calculator(history):
-    try:
-        num1 = float(input("Enter the first number: "))
-        operator = input("Enter the operator (+, -, *, /): ")
-        num2 = float(input("Enter the second number: "))
+    print("\nScientific Calculator Operations:")
+    print("+ : Addition")
+    print("- : Subtraction")
+    print("* : Multiplication")
+    print("/ : Division")
+    print("^ : Exponentiation")
+    print("sqrt : Square Root")
+    print("log : Logarithm (base 10)")
+    print("ln : Natural Logarithm (base e)")
+    print("sin : Sine (in radians)")
+    print("cos : Cosine (in radians)")
+    print("tan : Tangent (in radians)")
+    print("pi : π (pi)")
+    print("e : Euler's number")
 
-        if operator == '+':
-            result = num1 + num2
-        elif operator == '-':
-            result = num1 - num2
-        elif operator == '*':
-            result = num1 * num2
-        elif operator == '/':
-            if num2 == 0:
-                print("Error: Division by zero!")
-                return
-            result = num1 / num2
-        else:
-            print("Invalid operator!")
+    operation = input("Enter the operation: ").strip().lower()
+
+    if operation in ['+', '-', '*', '/', '^']:
+        try:
+            num1 = float(input("Enter the first number: "))
+            num2 = float(input("Enter the second number: "))
+
+            if operation == '+':
+                result = num1 + num2
+            elif operation == '-':
+                result = num1 - num2
+            elif operation == '*':
+                result = num1 * num2
+            elif operation == '/':
+                if num2 == 0:
+                    print("Error: Division by zero!")
+                    return
+                result = num1 / num2
+            elif operation == '^':
+                result = num1 ** num2
+
+            operation_str = f"{num1} {operation} {num2} = {result}"
+            print(operation_str)
+            history.append(operation_str)
+
+        except ValueError:
+            print("Invalid input! Please enter numbers.")
+
+    elif operation in ['sqrt', 'log', 'ln', 'sin', 'cos', 'tan']:
+        try:
+            num = float(input("Enter the number: "))
+
+            if operation == 'sqrt':
+                if num < 0:
+                    print("Error: Cannot calculate square root of a negative number!")
+                    return
+                result = math.sqrt(num)
+            elif operation == 'log':
+                if num <= 0:
+                    print("Error: Logarithm is undefined for non-positive numbers!")
+                    return
+                result = math.log10(num)
+            elif operation == 'ln':
+                if num <= 0:
+                    print("Error: Natural logarithm is undefined for non-positive numbers!")
+                    return
+                result = math.log(num)
+            elif operation == 'sin':
+                result = math.sin(num)
+            elif operation == 'cos':
+                result = math.cos(num)
+            elif operation == 'tan':
+                result = math.tan(num)
+
+            operation_str = f"{operation}({num}) = {result}"
+            print(operation_str)
+            history.append(operation_str)
+
+        except ValueError:
+            print("Invalid input! Please enter a number.")
+
+    elif operation == 'pi':
+        result = math.pi
+        operation_str = f"π = {result}"
+        print(operation_str)
+        history.append(operation_str)
+
+    elif operation == 'e':
+        result = math.e
+        operation_str = f"e = {result}"
+        print(operation_str)
+        history.append(operation_str)
+
+    else:
+        print("Invalid operation!")
+
+def currency_converter(history):
+    print("\nCurrency Converter")
+    print("Supported currencies: USD, EUR, INR, GBP")
+    print("Example: Convert 100 USD to INR")
+
+    try:
+        amount = float(input("Enter the amount: "))
+        from_currency = input("Enter the source currency (e.g., USD): ").strip().upper()
+        to_currency = input("Enter the target currency (e.g., INR): ").strip().upper()
+
+        # Fixed exchange rates (for demonstration purposes)
+        exchange_rates = {
+            'USD': 1.0,
+            'EUR': 0.85,
+            'INR': 82.0,
+            'GBP': 0.73,
+        }
+
+        if from_currency not in exchange_rates or to_currency not in exchange_rates:
+            print("Unsupported currency!")
             return
 
-        operation = f"{num1} {operator} {num2} = {result}"
-        print(operation)
-        history.append(operation)
-    except ValueError:
-        print("Invalid input! Please enter numbers.")
+        result = amount * (exchange_rates[to_currency] / exchange_rates[from_currency])
+        conversion_str = f"{amount} {from_currency} = {result:.2f} {to_currency}"
+        print(conversion_str)
+        history.append(conversion_str)
 
-def unit_converter(history):
-    print("Select category:")
-    print("1. Length")
-    print("2. Weight")
-    print("3. Temperature")
-    category = input("Enter your choice: ")
-
-    try:
-        value = float(input("Enter the value: "))
-
-        if category == '1':  # Length
-            print("1. Meters to Feet")
-            print("2. Feet to Meters")
-            print("3. Kilometers to Miles")
-            print("4. Miles to Kilometers")
-            choice = input("Enter your choice: ")
-            if choice == '1':
-                result = value * 3.28084
-                conversion = f"{value} meters = {result} feet"
-            elif choice == '2':
-                result = value / 3.28084
-                conversion = f"{value} feet = {result} meters"
-            elif choice == '3':
-                result = value * 0.621371
-                conversion = f"{value} kilometers = {result} miles"
-            elif choice == '4':
-                result = value / 0.621371
-                conversion = f"{value} miles = {result} kilometers"
-            else:
-                print("Invalid choice!")
-                return
-
-        elif category == '2':  # Weight
-            print("1. Kilograms to Pounds")
-            print("2. Pounds to Kilograms")
-            print("3. Grams to Ounces")
-            print("4. Ounces to Grams")
-            choice = input("Enter your choice: ")
-            if choice == '1':
-                result = value * 2.20462
-                conversion = f"{value} kilograms = {result} pounds"
-            elif choice == '2':
-                result = value / 2.20462
-                conversion = f"{value} pounds = {result} kilograms"
-            elif choice == '3':
-                result = value * 0.035274
-                conversion = f"{value} grams = {result} ounces"
-            elif choice == '4':
-                result = value / 0.035274
-                conversion = f"{value} ounces = {result} grams"
-            else:
-                print("Invalid choice!")
-                return
-
-        elif category == '3':  # Temperature
-            print("1. Celsius to Fahrenheit")
-            print("2. Fahrenheit to Celsius")
-            print("3. Celsius to Kelvin")
-            choice = input("Enter your choice: ")
-            if choice == '1':
-                result = (value * 9/5) + 32
-                conversion = f"{value}°C = {result}°F"
-            elif choice == '2':
-                result = (value - 32) * 5/9
-                conversion = f"{value}°F = {result}°C"
-            elif choice == '3':
-                result = value + 273.15
-                conversion = f"{value}°C = {result} K"
-            else:
-                print("Invalid choice!")
-                return
-
-        else:
-            print("Invalid category!")
-            return
-
-        print(conversion)
-        history.append(conversion)
     except ValueError:
         print("Invalid input! Please enter a number.")
 
@@ -120,8 +136,9 @@ def main():
         print("\nMenu:")
         print("1. Basic Calculator")
         print("2. Unit Converter")
-        print("3. View History")
-        print("4. Exit")
+        print("3. Currency Converter")
+        print("4. View History")
+        print("5. Exit")
         choice = input("Enter your choice: ")
 
         if choice == '1':
@@ -129,8 +146,10 @@ def main():
         elif choice == '2':
             unit_converter(history)
         elif choice == '3':
-            view_history(history)
+            currency_converter(history)
         elif choice == '4':
+            view_history(history)
+        elif choice == '5':
             print("Exiting the program. Goodbye!")
             break
         else:
