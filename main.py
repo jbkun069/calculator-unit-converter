@@ -144,7 +144,7 @@ def main():
         if choice == '1':
             basic_calculator(history)
         elif choice == '2':
-            unit_converter(history)
+            unit_converter(history) 
         elif choice == '3':
             currency_converter(history)
         elif choice == '4':
