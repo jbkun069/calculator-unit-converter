@@ -1,4 +1,7 @@
 import math
+import numpy as np
+from sympy import symbols, solve, diff, integrate, simplify
+from scipy import stats
 
 # Theme colors (ANSI escape codes)
 THEME_LIGHT = {
@@ -45,15 +48,16 @@ EXCHANGE_RATES = {
 current_theme = THEME_LIGHT
 
 def basic_calculator(history, num1, operation, num2):
-    """Perform basic and scientific calculations."""
+    """Perform basic calculations."""
     try:
         # Validate inputs
         if not isinstance(num1, (int, float)) or not isinstance(num2, (int, float)):
             raise ValueError("Numbers must be numeric values!")
         
-        if operation not in ['+', '-', '*', '/', '^']:
+        if operation not in ['+', '-', '*', '/', '^', '%', '//', '√', 'log', 'ln']:
             raise ValueError("Invalid operation!")
 
+        # Perform calculation based on operation
         if operation == '+':
             result = num1 + num2
         elif operation == '-':
@@ -66,14 +70,52 @@ def basic_calculator(history, num1, operation, num2):
             result = num1 / num2
         elif operation == '^':
             result = num1 ** num2
+        elif operation == '%':
+            if num2 == 0:
+                raise ValueError("Error: Modulo by zero!")
+            result = num1 % num2
+        elif operation == '//':
+            if num2 == 0:
+                raise ValueError("Error: Division by zero!")
+            result = num1 // num2
+        elif operation == '√':
+            # num1 is the number, num2 is the root
+            if num2 == 0:
+                raise ValueError("Error: Root cannot be zero!")
+            if num1 < 0 and num2 % 2 == 0:
+                raise ValueError("Error: Even root of negative number!")
+            result = num1 ** (1/num2)
+        elif operation == 'log':
+            if num1 <= 0 or num2 <= 0:
+                raise ValueError("Error: Logarithm inputs must be positive!")
+            if num2 == 1:
+                raise ValueError("Error: Log base cannot be 1!")
+            result = math.log(num1, num2)  # num2 is the base
+        elif operation == 'ln':
+            if num1 <= 0:
+                raise ValueError("Error: Natural log input must be positive!")
+            result = math.log(num1)  # num2 is ignored for natural log
         else:
             raise ValueError("Invalid operation!")
 
-        operation_str = f"{num1} {operation} {num2} = {result}"
+        # Format the operation string based on the operator
+        if operation == 'log':
+            operation_str = f"log base {num2} of {num1} = {result}"
+        elif operation == 'ln':
+            operation_str = f"ln({num1}) = {result}"
+        elif operation == '√':
+            operation_str = f"{num2}√{num1} = {result}"
+        else:
+            operation_str = f"{num1} {operation} {num2} = {result}"
+
+        # Add to history
         history.append(operation_str)
+        
         return result
     except ValueError as e:
         raise ValueError(str(e))
+    except Exception as e:
+        raise Exception(f"Error: {str(e)}")
 
 def unit_converter(history, category, value, choice):
     """Convert between various units."""
@@ -207,3 +249,48 @@ def confirm_exit():
         return True  # In a real implementation, you might want to add user input here
     except:
         return False
+
+def scientific_calculation(expr_str):
+    """Perform scientific calculations."""
+    try:
+        x = symbols('x')
+        expr = sympify(expr_str)
+        
+        derivative = diff(expr, x)
+        integral = integrate(expr, x)
+        simplified = simplify(expr)
+        
+        return {
+            'derivative': str(derivative),
+            'integral': str(integral),
+            'simplified': str(simplified)
+        }
+    except Exception as e:
+        raise ValueError(f"Invalid expression: {str(e)}")
+
+def statistical_analysis(numbers):
+    """Perform statistical analysis."""
+    try:
+        arr = np.array(numbers)
+        return {
+            'mean': np.mean(arr),
+            'median': np.median(arr),
+            'std': np.std(arr),
+            'var': np.var(arr),
+            'min': np.min(arr),
+            'max': np.max(arr)
+        }
+    except Exception as e:
+        raise ValueError(f"Invalid data: {str(e)}")
+
+def matrix_operations(matrix_a, matrix_b):
+    """Perform matrix operations."""
+    try:
+        return {
+            'addition': matrix_a + matrix_b,
+            'multiplication': matrix_a @ matrix_b,
+            'det_a': np.linalg.det(matrix_a),
+            'inverse_a': np.linalg.inv(matrix_a)
+        }
+    except Exception as e:
+        raise ValueError(f"Invalid matrices: {str(e)}")

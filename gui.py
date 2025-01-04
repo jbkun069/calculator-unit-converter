@@ -1,13 +1,16 @@
 import tkinter as tk
-from tkinter import messagebox, scrolledtext
+from tkinter import messagebox
 import ttkbootstrap as ttk
-from ttkbootstrap.constants import *  # Import constants for styles
+from ttkbootstrap.constants import *
 from ttkbootstrap.scrolled import ScrolledText
 from main import (
     basic_calculator, unit_converter, currency_converter,
     view_history, clear_history, export_history,
     change_theme, show_help, confirm_exit, THEME_LIGHT, THEME_DARK
 )
+import numpy as np
+from sympy import symbols, solve, diff, integrate, simplify
+from scipy import stats
 
 # Global variables
 history = []
@@ -74,101 +77,329 @@ class CalculatorApp:
         button_frame.grid_columnconfigure(1, weight=1)
 
     def open_basic_calculator(self):
-        """Open the basic calculator window with improved UI."""
+        """Open the enhanced basic calculator window."""
         calculator_window = ttk.Toplevel(self.root)
-        calculator_window.title("Basic Calculator")
-        calculator_window.geometry("400x600")
+        calculator_window.title("Advanced Calculator")
+        calculator_window.geometry("600x800")
 
-        # Create main frame with padding
+        # Main frame
         main_frame = ttk.Frame(calculator_window, padding="20")
         main_frame.pack(expand=YES, fill=BOTH)
 
-        # Title
-        ttk.Label(
-            main_frame,
-            text="Basic Calculator",
-            font=("Helvetica", 20, "bold"),
-            bootstyle="primary"
-        ).pack(pady=(0, 20))
+        # Create notebook for different calculator modes
+        notebook = ttk.Notebook(main_frame)
+        notebook.pack(fill=BOTH, expand=YES, pady=10)
 
-        # Input fields with better styling
-        input_frame = ttk.Frame(main_frame)
+        # Basic Operations Tab
+        basic_frame = ttk.Frame(notebook)
+        notebook.add(basic_frame, text="Basic")
+        
+        # Scientific Operations Tab
+        scientific_frame = ttk.Frame(notebook)
+        notebook.add(scientific_frame, text="Scientific")
+        
+        # Statistics Tab
+        stats_frame = ttk.Frame(notebook)
+        notebook.add(stats_frame, text="Statistics")
+
+        # Matrix Operations Tab
+        matrix_frame = ttk.Frame(notebook)
+        notebook.add(matrix_frame, text="Matrix")
+
+        # === Basic Operations Tab ===
+        # Input frame for basic calculations
+        input_frame = ttk.Frame(basic_frame)
         input_frame.pack(fill=X, pady=10)
 
-        # First number
+        # First number input
         ttk.Label(
-            input_frame,
+            basic_frame,
             text="First Number:",
             font=("Helvetica", 12)
         ).pack(anchor=W)
+        
         num1_entry = ttk.Entry(
-            input_frame,
-            font=("Helvetica", 12),
-            bootstyle="primary"
+            basic_frame,
+            font=("Helvetica", 12)
         )
-        num1_entry.pack(fill=X, pady=(5, 15))
+        num1_entry.pack(fill=X, pady=5)
 
-        # Operation
+        # Operation selection
         ttk.Label(
-            input_frame,
-            text="Operation (+, -, *, /, ^):",
+            basic_frame,
+            text="Operation:",
             font=("Helvetica", 12)
         ).pack(anchor=W)
-        operation_entry = ttk.Entry(
-            input_frame,
-            font=("Helvetica", 12),
-            bootstyle="primary"
+        
+        operation_var = tk.StringVar(value='+')
+        operations = ['+', '-', '*', '/', '^', '%', '//', '√', 'log', 'ln']
+        operation_menu = ttk.Combobox(
+            basic_frame,
+            textvariable=operation_var,
+            values=operations,
+            state="readonly",
+            font=("Helvetica", 12)
         )
-        operation_entry.pack(fill=X, pady=(5, 15))
+        operation_menu.pack(fill=X, pady=5)
 
-        # Second number
+        # Second number input
         ttk.Label(
-            input_frame,
+            basic_frame,
             text="Second Number:",
             font=("Helvetica", 12)
         ).pack(anchor=W)
+        
         num2_entry = ttk.Entry(
-            input_frame,
-            font=("Helvetica", 12),
-            bootstyle="primary"
+            basic_frame,
+            font=("Helvetica", 12)
         )
-        num2_entry.pack(fill=X, pady=(5, 15))
-
-        # Calculate button
-        ttk.Button(
-            main_frame,
-            text="Calculate",
-            command=lambda: calculate(),
-            bootstyle="success-outline",
-            width=20,
-            padding=10
-        ).pack(pady=20)
+        num2_entry.pack(fill=X, pady=5)
 
         # Result display
-        result_var = tk.StringVar(value="Result will appear here")
-        result_label = ttk.Label(
-            main_frame,
-            textvariable=result_var,
-            font=("Helvetica", 14),
-            bootstyle="info"
+        self.result_var = tk.StringVar(value="Result will appear here")
+        self.result_label = ttk.Label(
+            basic_frame,
+            textvariable=self.result_var,
+            font=("Helvetica", 14, "bold"),
+            bootstyle="info",
+            padding=10
         )
-        result_label.pack(pady=20)
+        self.result_label.pack(pady=20)
 
-        def calculate():
+        def calculate_basic():
             try:
-                if not num1_entry.get() or not num2_entry.get() or not operation_entry.get():
-                    raise ValueError("Please fill all fields")
-
                 num1 = float(num1_entry.get())
-                operation = operation_entry.get().strip()
                 num2 = float(num2_entry.get())
-                
+                operation = operation_var.get()
+
                 result = basic_calculator(history, num1, operation, num2)
-                result_var.set(f"Result: {result}")
+                
+                # Format the result for display
+                if isinstance(result, float) and result.is_integer():
+                    formatted_result = int(result)
+                else:
+                    formatted_result = f"{result:.6g}"
+                
+                # Update the result display immediately
+                self.result_var.set(f"Result: {formatted_result}")
+                
+                # Force update the display
+                calculator_window.update_idletasks()
+                basic_frame.update_idletasks()
+                self.result_label.update_idletasks()
+                
             except ValueError as e:
-                messagebox.showerror("Error", str(e))
+                self.result_var.set(f"Error: {str(e)}")
+                calculator_window.update_idletasks()
             except Exception as e:
-                messagebox.showerror("Unexpected Error", str(e))
+                self.result_var.set(f"Error: {str(e)}")
+                calculator_window.update_idletasks()
+
+        # Calculate button
+        calc_button = ttk.Button(
+            basic_frame,
+            text="Calculate",
+            command=calculate_basic,
+            bootstyle="primary",
+            width=20,
+            padding=10
+        )
+        calc_button.pack(pady=10)
+
+        # Clear button
+        def clear_inputs():
+            num1_entry.delete(0, tk.END)
+            num2_entry.delete(0, tk.END)
+            operation_var.set('+')
+            self.result_var.set("Result will appear here")
+            calculator_window.update_idletasks()
+
+        ttk.Button(
+            basic_frame,
+            text="Clear",
+            command=clear_inputs,
+            bootstyle="secondary",
+            width=20,
+            padding=10
+        ).pack(pady=10)
+
+        # === Scientific Operations Tab ===
+        ttk.Label(
+            scientific_frame,
+            text="Scientific Calculator",
+            font=("Helvetica", 16, "bold")
+        ).pack(pady=10)
+
+        # Expression input
+        ttk.Label(
+            scientific_frame,
+            text="Enter Expression (use x as variable):",
+            font=("Helvetica", 12)
+        ).pack(anchor=W)
+        
+        expr_entry = ttk.Entry(
+            scientific_frame,
+            font=("Helvetica", 12)
+        )
+        expr_entry.pack(fill=X, pady=5)
+
+        result_var = tk.StringVar()
+        result_label = ttk.Label(
+            scientific_frame,
+            textvariable=result_var,
+            font=("Helvetica", 12)
+        )
+        result_label.pack(pady=10)
+
+        def calculate_scientific():
+            try:
+                expr = expr_entry.get()
+                x = symbols('x')
+                
+                # Calculate derivative
+                derivative = diff(expr, x)
+                # Calculate integral
+                integral = integrate(expr, x)
+                # Simplify expression
+                simplified = simplify(expr)
+
+                result = f"Derivative: {derivative}\n"
+                result += f"Integral: {integral}\n"
+                result += f"Simplified: {simplified}"
+                
+                result_var.set(result)
+                history.append(f"Scientific calculation: {expr}\n{result}")
+            except Exception as e:
+                result_var.set(f"Error: {str(e)}")
+
+        ttk.Button(
+            scientific_frame,
+            text="Calculate",
+            command=calculate_scientific,
+            bootstyle="primary"
+        ).pack(pady=10)
+
+        # === Statistics Tab ===
+        ttk.Label(
+            stats_frame,
+            text="Statistical Analysis",
+            font=("Helvetica", 16, "bold")
+        ).pack(pady=10)
+
+        ttk.Label(
+            stats_frame,
+            text="Enter numbers (comma-separated):",
+            font=("Helvetica", 12)
+        ).pack(anchor=W)
+
+        stats_entry = ttk.Entry(
+            stats_frame,
+            font=("Helvetica", 12)
+        )
+        stats_entry.pack(fill=X, pady=5)
+
+        stats_result = tk.StringVar()
+        stats_label = ttk.Label(
+            stats_frame,
+            textvariable=stats_result,
+            font=("Helvetica", 12)
+        )
+        stats_label.pack(pady=10)
+
+        def calculate_stats():
+            try:
+                numbers = [float(x.strip()) for x in stats_entry.get().split(',')]
+                numbers = np.array(numbers)
+                
+                result = f"Mean: {np.mean(numbers):.2f}\n"
+                result += f"Median: {np.median(numbers):.2f}\n"
+                result += f"Std Dev: {np.std(numbers):.2f}\n"
+                result += f"Variance: {np.var(numbers):.2f}\n"
+                result += f"Min: {np.min(numbers):.2f}\n"
+                result += f"Max: {np.max(numbers):.2f}"
+                
+                stats_result.set(result)
+                history.append(f"Statistical analysis:\n{result}")
+            except Exception as e:
+                stats_result.set(f"Error: {str(e)}")
+
+        ttk.Button(
+            stats_frame,
+            text="Analyze",
+            command=calculate_stats,
+            bootstyle="primary"
+        ).pack(pady=10)
+
+        # === Matrix Operations Tab ===
+        ttk.Label(
+            matrix_frame,
+            text="Matrix Operations",
+            font=("Helvetica", 16, "bold")
+        ).pack(pady=10)
+
+        # Matrix A input
+        ttk.Label(
+            matrix_frame,
+            text="Enter Matrix A (comma-separated rows, semicolon between rows):",
+            font=("Helvetica", 12)
+        ).pack(anchor=W)
+
+        matrix_a_entry = ttk.Entry(
+            matrix_frame,
+            font=("Helvetica", 12)
+        )
+        matrix_a_entry.pack(fill=X, pady=5)
+
+        # Matrix B input
+        ttk.Label(
+            matrix_frame,
+            text="Enter Matrix B (same format):",
+            font=("Helvetica", 12)
+        ).pack(anchor=W)
+
+        matrix_b_entry = ttk.Entry(
+            matrix_frame,
+            font=("Helvetica", 12)
+        )
+        matrix_b_entry.pack(fill=X, pady=5)
+
+        matrix_result = tk.StringVar()
+        matrix_label = ttk.Label(
+            matrix_frame,
+            textvariable=matrix_result,
+            font=("Helvetica", 12)
+        )
+        matrix_label.pack(pady=10)
+
+        def parse_matrix(text):
+            """Convert string input to numpy matrix."""
+            rows = text.strip().split(';')
+            return np.array([
+                [float(x.strip()) for x in row.split(',')]
+                for row in rows
+            ])
+
+        def calculate_matrix():
+            try:
+                matrix_a = parse_matrix(matrix_a_entry.get())
+                matrix_b = parse_matrix(matrix_b_entry.get())
+                
+                result = f"Matrix Addition:\n{matrix_a + matrix_b}\n\n"
+                result += f"Matrix Multiplication:\n{matrix_a @ matrix_b}\n\n"
+                result += f"Matrix A Determinant: {np.linalg.det(matrix_a):.2f}\n"
+                result += f"Matrix A Inverse:\n{np.linalg.inv(matrix_a)}"
+                
+                matrix_result.set(result)
+                history.append(f"Matrix operations:\n{result}")
+            except Exception as e:
+                matrix_result.set(f"Error: {str(e)}")
+
+        ttk.Button(
+            matrix_frame,
+            text="Calculate",
+            command=calculate_matrix,
+            bootstyle="primary"
+        ).pack(pady=10)
 
     def open_unit_converter(self):
         """Open the unit converter window with inline results."""
@@ -530,6 +761,10 @@ class CalculatorApp:
 
 # Run the GUI Application
 if __name__ == "__main__":
-    root = ttk.Window(themename="cosmo")  # Initialize with light theme
-    app = CalculatorApp(root)
-    root.mainloop()
+    try:
+        # Create the root window with ttkbootstrap
+        root = ttk.Window(themename="cosmo")
+        app = CalculatorApp(root)
+        root.mainloop()
+    except Exception as e:
+        print(f"Error starting application: {str(e)}")
